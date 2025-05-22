@@ -1,0 +1,148 @@
+
+    <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Para Ti </title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: #000;
+      font-family: Arial, sans-serif;
+    }
+    .te-amo {
+      position: absolute;
+      color: purple;
+      font-size: 2rem;
+      user-select: none;
+      pointer-events: none; /* Prevent interaction with the text itself */
+      text-shadow: 0 0 10px purple;
+    }
+    .particle {
+      position: absolute;
+      color: purple;
+      font-size: 1rem;
+      user-select: none;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <script>
+    const teAmoElements = []; // Track all TE AMO elements
+
+    // Function to create falling TE AMO text
+    function createTeAmo() {
+      const teAmo = document.createElement('div');
+      teAmo.className = 'te-amo';
+      teAmo.textContent = 'TE AMO';
+      teAmo.style.left = Math.random() * 100 + 'vw';
+      teAmo.style.top = '-50px';
+      teAmo.style.animation = `fall ${Math.random() * 4 + 3}s linear`; // Fast fall: 2-5 seconds
+      document.body.appendChild(teAmo);
+      teAmoElements.push(teAmo);
+
+      // Remove after animation and from array
+      teAmo.addEventListener('animationend', () => {
+        teAmo.remove();
+        const index = teAmoElements.indexOf(teAmo);
+        if (index > -1) teAmoElements.splice(index, 1);
+      });
+
+      // Generate more TE AMO instances for abundance
+      if (Math.random() > 0.1) setTimeout(createTeAmo, 100); // 90% chance, spawn very frequently
+    }
+
+    // Explosion effect with more TE AMO particles in purple shades
+    function explode(x, y) {
+      const particles = 20; // More particles for a richer explosion
+      for (let i = 0; i < particles; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+        particle.textContent = 'TE AMO';
+        particle.style.left = x + 'px';
+        particle.style.top = y + 'px';
+        // Random purple shades
+        const purpleShade = `rgb(${Math.random() * 55 + 100}, 0, ${Math.random() * 55 + 150})`;
+        particle.style.color = purpleShade;
+        particle.style.textShadow = `0 0 5px ${purpleShade}`;
+        document.body.appendChild(particle);
+
+        // Animate particle
+        const angle = Math.random() * Math.PI * 2;
+        const speed = Math.random() * 5 + 3;
+        const vx = Math.cos(angle) * speed;
+        const vy = Math.sin(angle) * speed;
+
+        function animate() {
+          let top = parseFloat(particle.style.top) || y;
+          let left = parseFloat(particle.style.left) || x;
+          top += vy;
+          left += vx;
+          particle.style.top = top + 'px';
+          particle.style.left = left + 'px';
+          particle.style.opacity = Math.max(0, parseFloat(particle.style.opacity || 1) - 0.05);
+
+          if (top < window.innerHeight && parseFloat(particle.style.opacity || 1) > 0) {
+            requestAnimationFrame(animate);
+          } else {
+            particle.remove();
+          }
+        }
+        requestAnimationFrame(animate);
+      }
+    }
+
+    // Check for nearby TE AMO elements and trigger explosion
+    function checkForExplosion(clickX, clickY) {
+      let exploded = false;
+      teAmoElements.forEach((teAmo, index) => {
+        const rect = teAmo.getBoundingClientRect();
+        const teAmoX = rect.left + rect.width / 2;
+        const teAmoY = rect.top + rect.height / 2;
+        const distance = Math.sqrt((clickX - teAmoX) ** 2 + (clickY - teAmoY) ** 2);
+
+        // Explode if click is within 100px of the TE AMO
+        if (distance < 100) {
+          explode(teAmoX, teAmoY);
+          teAmo.remove();
+          teAmoElements.splice(index, 1);
+          exploded = true;
+        }
+      });
+
+      // If no TE AMO was nearby, explode at click location anyway
+      if (!exploded) {
+        explode(clickX, clickY);
+      }
+    }
+
+    // CSS Keyframes
+    const styleSheet = document.styleSheets[0];
+    styleSheet.insertRule(`
+      @keyframes fall {
+        to {
+          transform: translateY(100vh);
+        }
+      }
+    `, styleSheet.cssRules.length);
+
+    // Start creating TE AMO instances
+    for (let i = 0; i < 10; i++) { // More initial instances
+      setTimeout(createTeAmo, i * 200); // Faster initial spawn
+    }
+
+    // Continuous spawning
+    setInterval(createTeAmo, 500); // Very frequent spawning for abundance
+
+    // Click event on the screen
+    document.addEventListener('click', (e) => {
+      const clickX = e.clientX;
+      const clickY = e.clientY;
+      checkForExplosion(clickX, clickY);
+    });
+  </script>
+</body>
+</html>
